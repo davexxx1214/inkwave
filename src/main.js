@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { G, on, emit, clamp, damp } from './core/ctx.js';
 import { Renderer } from './core/renderer.js';
 import { Input } from './core/input.js';
+import { TouchControls, hasTouchControls } from './core/touch.js';
 import { mapTheme,
   DEFAULT_SETTINGS, QUALITY, TEAM_PALETTES, COLORBLIND_PALETTE, TEAM_NAMES, WEAPONS, WEAPON_ORDER, SUB, SPECIALS,
   MAPS, DIFFICULTY, PLAYER, PROGRESSION, VERSION, MATCH,
@@ -30,7 +31,7 @@ const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 // ------------------------------------------------------------------------------------------ persistence
 function loadJSON(key, def) { try { const v = JSON.parse(localStorage.getItem(key)); return v ? { ...def, ...v } : { ...def }; } catch { return { ...def }; } }
 function saveJSON(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode */ } }
-const DEFAULT_PROFILE = { name: 'Player', level: 1, xp: 0, wins: 0, matches: 0, totalTurf: 0, weapon: 'shooter' };
+const DEFAULT_PROFILE = { name: '玩家', level: 1, xp: 0, wins: 0, matches: 0, totalTurf: 0, weapon: 'shooter' };
 
 async function loadModule(path, stubName) {
   try { return await import(path); }
@@ -46,7 +47,7 @@ class Game {
     const t0 = performance.now();
     // real top-down thumbnails for the stage cards, generated from each layout's geometry
     for (const m of MAPS) { try { m.thumb = layoutThumbSVG(MAP_LAYOUTS[m.layout || m.id], m.theme); } catch (e) { console.warn('thumb', m.id, e); } }
-    this.settings = G.settings = loadJSON('inkwave.settings', DEFAULT_SETTINGS);
+    this.settings = G.settings = loadJSON('inkwave.settings', { ...DEFAULT_SETTINGS, ...(hasTouchControls() ? { quality: 'low' } : {}) });
     // v1.1: fov became horizontal — migrate old vertical values once
     if (this.settings.fovMode !== 'h') { this.settings.fov = DEFAULT_SETTINGS.fov; this.settings.fovMode = 'h'; saveJSON('inkwave.settings', this.settings); }
     this.profile = loadJSON('inkwave.profile', DEFAULT_PROFILE);
@@ -64,7 +65,7 @@ class Game {
     this.menus?.show('loading');
     this.bootMarks = [];
     const progress = async (p, label) => { this.bootMarks.push([label, Math.round(performance.now() - t0)]); this.menus?.setLoading(p, label); await nextFrame(); };
-    await progress(0.05, 'Mixing ink…');
+    await progress(0.05, '正在调配墨水…');
 
     // renderer / scene
     this.R = new Renderer(app, this.settings);
@@ -74,6 +75,7 @@ class Game {
     camera.position.set(0, 40, -60);
     this.R.setScene(scene, camera);
     this.input = G.input = new Input(this.R.renderer.domElement);
+    this.touchControls = this.input.touchControls = new TouchControls(this.input, this);
     this.input.onKey = (e, repeat) => this._onKey(e, repeat);
     this.input.onUnlock = () => this._onPointerUnlock();
     // after a focus steal while the map was held, the next click on the game takes the mouse back (no pause detour)
@@ -89,7 +91,7 @@ class Game {
     this.CharacterClass = charMod.Character;
     try { this.PropKit = (await import('./world/props.js')).PropKit; } catch (e) { console.error('[inkwave] prop kit failed to load', e); this.PropKit = null; }
     G.audio = audioMod.audio; G.music = musicMod.music;
-    await progress(0.15, 'Building the plaza…');
+    await progress(0.15, '正在搭建广场…');
 
     // world
     // (old ?map=sunset links = Tidewater at dusk)
@@ -104,7 +106,7 @@ class Game {
       this.texlib = await createTextureLibrary(G.renderer, { size: q.paintAtlas >= 4096 ? 512 : 256 });
     } catch (e) { console.error('[inkwave] texture library failed — procedural fallback', e); this.texlib = null; }
     await this._buildWorld(map);
-    await progress(0.4, 'Filling the harbor…');
+    await progress(0.4, '正在布置港湾…');
     const B = G.level.bounds;
     G.env = new envMod.Environment(G.renderer, scene, { bounds: B, theme: this.theme, shadowSize: q.shadowSize, footprint: this._footprint(G.level) });
     if (G.env.envMap) scene.environment = G.env.envMap;
@@ -112,7 +114,7 @@ class Game {
     scene.environmentIntensity = 0.66;
     G.renderer.toneMappingExposure = 0.94;
     if (G.env.hemi) G.env.hemi.intensity = Math.max(G.env.hemi.intensity, 0.38);
-    await progress(0.55, 'Teaching squids to swim…');
+    await progress(0.55, '正在训练乌贼潜游…');
     G.projectiles = new Projectiles(scene);
     G.fx = new fxMod.FX(scene, { quality: q });
     G.fx.setLighting?.(G.env.getSkyColors?.());
@@ -130,19 +132,19 @@ class Game {
     try { const m = await import('./fx/fxHooks.js'); this.fxHooks = m.initFxHooks?.(G) || null; } catch (e) { if (!/Failed to fetch|Cannot find module|404/i.test(String(e))) console.error('[inkwave] fxHooks', e); }
     try { const m = await import('./fx/screenfx.js'); this.screenfx = m.ScreenFX ? new m.ScreenFX(this.R, G) : null; } catch (e) { if (!/Failed to fetch|Cannot find module|404/i.test(String(e))) console.error('[inkwave] screenfx', e); }
     this.showcase = new Showcase(G.renderer, this.CharacterClass);
-    await progress(0.7, 'Tuning the tentacles…');
+    await progress(0.7, '正在调整触手…');
 
     this._setPalette(this._pickPalette());
     this._bindEvents();
     this._startAttract();
     // warm up: compile every shader now so the first shot/splat never hitches
-    await progress(0.85, 'Warming up…');
+    await progress(0.85, '正在预热…');
     this._warmup();
     // compile in parallel (KHR_parallel_shader_compile) so the loading screen keeps animating instead of freezing
     try { await G.renderer.compileAsync(scene, camera); } catch { G.renderer.compile(scene, camera); }
-    await progress(0.93, 'Warming up…');
+    await progress(0.93, '正在预热…');
     for (let i = 0; i < 3; i++) { this._frame(1 / 60); await nextFrame(); }
-    await progress(1, 'Ready!');
+    await progress(1, '准备就绪！');
     await new Promise((r) => setTimeout(r, 250));
 
     this.timer = new THREE.Timer(); this.timer.connect?.(document);
@@ -297,7 +299,7 @@ class Game {
         const p = self.profile;
         return { ...p, played: p.matches, xpToNext: PROGRESSION.xpForLevel(p.level) };
       },
-      setProfileName: (n) => { self.profile.name = String(n || 'Player').slice(0, 16); saveJSON('inkwave.profile', self.profile); },
+      setProfileName: (n) => { self.profile.name = String(n || '玩家').slice(0, 16); saveJSON('inkwave.profile', self.profile); },
       // locker look ({ hair, skin, outfit, eyes, hat, brows, … } — indices into character-style.js tables)
       setProfileStyle: (st) => { self.profile.style = { ...(st || {}) }; saveJSON('inkwave.profile', self.profile); },
       getLoadout: () => ({ weapon: self.profile.weapon || 'shooter' }),
@@ -540,7 +542,7 @@ class Game {
     this._setPalette(this._pickPalette());
     const m = (this.match = G.match = new Match({
       attract: false, duration: opts.duration, difficulty: opts.difficulty, weapon: this.profile.weapon || 'shooter',
-      playerName: this.profile.name || 'Player', CharacterClass: this.CharacterClass, rig: this.rig, input: this.input,
+      playerName: this.profile.name || '玩家', CharacterClass: this.CharacterClass, rig: this.rig, input: this.input,
       autopilot: params.has('autopilot'), style: this.profile.style || null,
     }));
     m.setup();
@@ -572,6 +574,7 @@ class Game {
     // only a live round (or its intro) can pause — never on top of time's up / judge / results
     if (this.match.state !== 'playing' && this.match.state !== 'intro') return;
     this.match.paused = true;
+    this.touchControls.reset();
     this.input.exitLock();
     this.menus?.show('pause');
     G.audio?.duck?.(0.5, 99);
@@ -677,11 +680,14 @@ class Game {
 
   _frame(dt) {
     const tA = performance.now();
+    // Sync before camera/map/aim calculations, not just at the final render.
+    this.R.resize();
     G.renderer.info.reset();
     G.time += dt;
     this.input.pollPad();
     this._padMenus();
     const m = this.match;
+    this.touchControls.update();
     if (m) {
       m.updateController(dt);
       const sub = dt > 1 / 45 ? 2 : 1; // substep physics on slow frames

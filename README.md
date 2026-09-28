@@ -58,6 +58,20 @@
 
 Gamepads work on the hosted (https) version. On a plain `http://` LAN address browsers block the Gamepad API.
 
+### Phone / touch controls
+
+Play in landscape. Touch devices show a left movement stick and a right swipe area for aiming.
+Hold **开火** to shoot; dragging that button also aims, so you can move and fire with two thumbs.
+Hold **潜游** to swim, **跳跃** to jump, **炸弹** for your bomb, and **大招** for your special.
+Tap **地图** to toggle the map and use the teammate/base buttons for Super Jumps; **Ⅱ** pauses.
+Opening a match attempts fullscreen and landscape lock. Browsers that do not support locking
+show a rotation prompt in portrait; rotate the phone and resume. Switching away pauses the match
+and releases all held controls. New mobile profiles default to Low graphics.
+
+To test on a phone, connect it to the same Wi-Fi and open the LAN address printed by the server.
+`node tools/mobile-smoke.mjs` checks mobile multitouch and viewport behavior in Chrome
+(set `CHROME_PATH` if Chrome is installed in a nonstandard location).
+
 ## Running locally
 
 There is no build step. Any static file server works; the included one also serves to your LAN and sends no-cache headers so module updates are never stale.

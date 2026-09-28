@@ -1,6 +1,10 @@
 dist/
 node_modules/
+artifacts/
 .vercel/
 .wrangler/
 .env*
+config.yaml
+dave.pem
 .DS_Store
+/agent.md

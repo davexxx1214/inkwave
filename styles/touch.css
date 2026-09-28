@@ -1,0 +1,53 @@
+/* Phone play uses only the landscape layout; portrait is a rotation gate. */
+body.iw-touch { overscroll-behavior: none; -webkit-touch-callout: none; }
+.iw-touch #app { touch-action: none; }
+.iw-touch #ui-root { touch-action: manipulation; }
+.iw-touch-controls { position: fixed; inset: 0; z-index: 15; pointer-events: none; touch-action: none; user-select: none; --edge: max(14px, env(safe-area-inset-right)); --bottom: max(12px, env(safe-area-inset-bottom)); --button: clamp(48px, 13vh, 66px); }
+.iw-touch-controls[hidden], .iw-touch-jumps[hidden] { display: none; }
+.iw-touch-controls button, .iw-touch-rotate button { color: #fff; font: 700 13px system-ui, sans-serif; border: 2px solid #ffffff70; background: #17172799; box-shadow: 0 3px 0 #0004; cursor: pointer; touch-action: none; }
+.iw-touch-controls button { position: absolute; width: var(--button); height: var(--button); border-radius: 50%; pointer-events: auto; padding: 0; }
+.iw-touch-controls button.is-held, .iw-touch-controls button[aria-pressed="true"] { background: #ff8a14d9; border-color: #fff; }
+.iw-touch-look { position: absolute; left: 43%; right: 0; top: 20%; bottom: 0; pointer-events: auto; }
+.iw-touch-stick { position: absolute; left: max(28px, env(safe-area-inset-left)); bottom: var(--bottom); width: clamp(112px, 32vh, 150px); aspect-ratio: 1; border-radius: 50%; border: 2px solid #ffffff55; background: #17172750; pointer-events: auto; display: grid; place-items: center; box-sizing: border-box; }
+.iw-touch-stick span { width: 42%; height: 42%; border: 2px solid #ffffffa0; background: #ffffff35; border-radius: 50%; pointer-events: none; box-sizing: border-box; }
+.iw-touch-stick small { position: absolute; bottom: 8%; color: #ffffffb0; font: 11px system-ui; pointer-events: none; }
+.iw-touch-tools { position: absolute; left: max(14px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); display: flex; gap: 12px; }
+.iw-touch-tools button, .iw-touch-jumps button { position: static; width: 48px; height: 44px; border-radius: 14px; }
+.iw-touch-fire { right: calc(var(--edge) + 65px); bottom: calc(var(--bottom) + var(--button) + 12px); width: calc(var(--button) + 20px) !important; height: calc(var(--button) + 20px) !important; background: #e47716a6 !important; }
+.iw-touch-fire.is-held { background: #ff8a14ed !important; }
+.iw-touch-fire small { display: block; font-size: 9px; margin-top: 3px; opacity: .8; }
+.iw-touch-jump { right: var(--edge); bottom: var(--bottom); }
+.iw-touch-sub { right: var(--edge); bottom: calc(var(--bottom) + var(--button) + 32px); }
+.iw-touch-special { right: calc(var(--edge) + var(--button) + 26px); bottom: calc(var(--bottom) + var(--button) * 2 + 44px); }
+.iw-touch-squid { right: calc(var(--edge) + 75px); bottom: var(--bottom); }
+.iw-touch-hint { position: absolute; right: 23%; bottom: 12px; color: #ffffff80; font: 11px system-ui; }
+.iw-touch-jumps { position: absolute; left: 50%; bottom: var(--bottom); transform: translateX(-50%); display: flex; gap: 12px; }
+.iw-touch-jumps button { width: 64px; }
+.iw-touch-controls.is-map > button, .iw-touch-controls.is-map .iw-touch-stick, .iw-touch-controls.is-map .iw-touch-look, .iw-touch-controls.is-map .iw-touch-hint { display: none; }
+.iw-touch-rotate { display: none; position: fixed; inset: 0; z-index: 100; background: #131020; color: white; font-family: system-ui, sans-serif; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 24px; }
+.iw-touch-rotate > span { font-size: 84px; color: #ff8a14; }
+.iw-touch-rotate strong { font-size: 26px; }
+.iw-touch-rotate p { font-size: 14px; color: #c3bdd6; }
+.iw-touch-rotate button { padding: 14px 28px; border-radius: 16px; margin-top: 20px; }
+.iw-touch .iw-cursor, .iw-touch .iw-prompts, .iw-touch .iw-prompt, .iw-touch .iw-dio__foot { display: none; }
+.iw-touch .iw-map__label .iw-key, .iw-touch .iw-backbtn .iw-key, .iw-touch .iw-ctl-switch { display: none; }
+.iw-touch .iw-backbtn { min-width: 44px; min-height: 44px; }
+.iw-touch .iw-hud { inset: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+@media (orientation: portrait) { .iw-touch .iw-touch-rotate { display: flex; } }
+@media (max-height: 500px) and (orientation: landscape) {
+  .iw-touch .iw-ui, .iw-touch .iw-hud, .iw-touch .iw-hud-over { --u: min(1vw, 1.7778dvh); --fs-xs: 9px; --fs-s: 10px; --fs-m: 11px; --fs-l: 13px; }
+  .iw-touch .iw-row { min-height: 40px; }
+  .iw-touch .iw-main__menu { top: 66px; bottom: 20px; transform: none; gap: 5px; overflow-y: auto; touch-action: pan-y; padding: 5px; }
+  .iw-touch .iw-main__menu .iw-btn { flex-shrink: 0; }
+  .iw-touch .iw-main__menu .iw-btn--menu:not(.iw-btn--xl) { height: 40px; }
+  .iw-touch .iw-main__desc { display: none; }
+  .iw-touch .iw-settings__panel { max-height: calc(100dvh - 96px); overflow-y: auto; touch-action: pan-y; }
+  .iw-touch .iw-ss__left, .iw-touch .iw-loadout__body {
+    bottom: max(12px, env(safe-area-inset-bottom)); overflow-y: auto;
+    touch-action: pan-y; padding: 5px 8px; scrollbar-width: thin;
+  }
+  .iw-touch .iw-ss__left > *, .iw-touch .iw-loadout__body > * { flex-shrink: 0; }
+  .iw-touch .iw-ctl--compact .iw-ctl__row { gap: 6px; }
+  .iw-touch .iw-ctl--compact .iw-ctl__act { flex-shrink: 0; white-space: nowrap; }
+  .iw-touch .iw-ctl--compact .iw-ctl__keys { min-width: 0; white-space: normal; }
+}

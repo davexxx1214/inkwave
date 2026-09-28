@@ -49,7 +49,7 @@ export class PlayerController {
     let lookActive = false;
     // while the map diorama is up the mouse / right stick steer the map cursor, not your camera
     const mapUp = (G.rig?.mapK ?? 0) > 0.05 || inp.down('Tab') || inp.down('KeyM') || inp.padButton(8);
-    const mdx = mapUp ? 0 : inp.mouse.dx, mdy = mapUp ? 0 : inp.mouse.dy;
+    const mdx = mapUp ? 0 : inp.mouse.dx + inp.touch.dx, mdy = mapUp ? 0 : inp.mouse.dy + inp.touch.dy;
     if (mdx || mdy) {
       const sens = 0.0021 * (s.sensitivity ?? 1) * (s.aimAssistMouse ? friction : 1);
       rig.yaw -= mdx * sens;
@@ -71,7 +71,7 @@ export class PlayerController {
       rig.pitch -= this.padLook.y * 2.4 * ps * friction * dt * inv;
     }
     // ---- move (camera relative)
-    let mx = 0, mz = 0;
+    let mx = inp.touch.x, mz = -inp.touch.y;
     if (inp.down('KeyW') || inp.down('ArrowUp')) mz += 1;
     if (inp.down('KeyS') || inp.down('ArrowDown')) mz -= 1;
     if (inp.down('KeyA') || inp.down('ArrowLeft')) mx -= 1;
@@ -94,7 +94,7 @@ export class PlayerController {
 
     it.jump = inp.down('Space') || inp.padButton(0);
     it.squid = inp.down('ShiftLeft') || inp.down('ShiftRight') || inp.padValue(6) > 0.3;
-    it.fire = inp.mouse.left || inp.padValue(7) > 0.3;
+    it.fire = inp.mouse.left || inp.touch.fire || inp.padValue(7) > 0.3;
     it.sub = inp.mouse.right || inp.down('KeyE') || inp.padButton(5);
     it.special = inp.down('KeyF') || inp.down('KeyQ') || inp.padButton(3) || inp.padButton(11);
     this.mapHeld = inp.down('Tab') || inp.down('KeyM') || inp.padButton(8);

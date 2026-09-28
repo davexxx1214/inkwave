@@ -96,8 +96,8 @@ export class Renderer {
     this.dynScale = this.dynScale || 1;
     const pr = Math.min(window.devicePixelRatio || 1, q.pixelRatio) * this.dynScale;
     r.setPixelRatio(pr);
-    const w = window.innerWidth, h = window.innerHeight;
-    r.setSize(w, h);
+    const w = Math.max(1, this.container.clientWidth), h = Math.max(1, this.container.clientHeight);
+    r.setSize(w, h, false);
     const rt = new THREE.WebGLRenderTarget(w * pr, h * pr, { type: THREE.HalfFloatType, samples: q.msaa || 0 });
     const comp = (this.composer = new EffectComposer(r, rt));
     comp.setPixelRatio(pr);
@@ -124,7 +124,9 @@ export class Renderer {
     comp.addPass(new OutputPass());
     r.shadowMap.enabled = this.settings.shadows !== false;
     this._w = w; this._h = h;
+    this._pr = pr;
     this.grade.uniforms.uAspect.value = w / h;
+    this._syncCamera(w, h);
   }
 
   // Install (or replace) the screen-FX post pass; kept across quality/setting rebuilds.
@@ -151,21 +153,35 @@ export class Renderer {
     s = Math.max(0.75, Math.min(1, s));
     if (Math.abs(s - this.dynScale) < 0.01) return;
     this.dynScale = s;
-    const pr = Math.min(window.devicePixelRatio || 1, this.q.pixelRatio) * s;
-    this.renderer.setPixelRatio(pr);
-    this.composer.setPixelRatio(pr);
-    this.composer.setSize(this._w, this._h);
+    this.resize();
+  }
+
+  _syncCamera(w, h) {
+    // Composer rebuilds also consume size changes. Never rely on a later resize
+    // event to update the projection (rotation/fullscreen can happen during boot).
+    if (this.camera && this.camera.aspect !== w / h) {
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   resize() {
-    const w = window.innerWidth, h = window.innerHeight;
-    if (w === this._w && h === this._h) return;
-    this._w = w; this._h = h;
-    this.renderer.setSize(w, h);
-    this.composer.setSize(w, h);
-    this.gtao?.setSize(w, h);
-    this.grade.uniforms.uAspect.value = w / h;
-    if (this.camera) { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
+    const w = this.container.clientWidth, h = this.container.clientHeight;
+    if (w < 1 || h < 1) return; // Ignore transient hidden/zero-sized containers.
+    const pr = Math.min(window.devicePixelRatio || 1, this.q.pixelRatio) * this.dynScale;
+    if (w !== this._w || h !== this._h || pr !== this._pr) {
+      this._w = w; this._h = h;
+      this.renderer.setSize(w, h, false);
+      if (pr !== this._pr) {
+        this._pr = pr;
+        this.renderer.setPixelRatio(pr);
+        this.composer.setPixelRatio(pr);
+      }
+      // EffectComposer resizes every pass, including GTAO, at render resolution.
+      this.composer.setSize(w, h);
+      this.grade.uniforms.uAspect.value = w / h;
+    }
+    this._syncCamera(w, h);
   }
 
   render() {

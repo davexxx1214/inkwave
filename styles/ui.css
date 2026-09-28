@@ -23,7 +23,7 @@
   --a: #ff8a14; --a-rgb: 255,138,20; --a-dark: #b8620f; --a-deep: #6a3a12; --a-light: #ffc48a; --a-ink: #15121c;
   --b: #2f5bff; --b-rgb: 47,91,255; --b-dark: #2442b4; --b-deep: #1d2766; --b-light: #98b0ff; --b-ink: #ffffff;
   position: absolute; inset: 0;
-  font-family: 'Rubik', system-ui, sans-serif; font-weight: 500;
+  font-family: 'Rubik', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans CJK SC', system-ui, sans-serif; font-weight: 500;
   color: #fff; line-height: 1.2;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -1555,3 +1555,14 @@ circle.iw-ico-cut { fill: var(--cut, #fff); }
 /* stage select: keep the header subtitle clear of the hero's corner splat; tickets never touch the hero */
 .iw-ss__splat:not(.is-b) { left: auto; right: calc(var(--u) * 16); top: calc(var(--u) * -3.2); width: calc(var(--u) * 9); }
 .iw-ss__left { width: calc(var(--u) * 24.6); }
+/* Simplified Chinese menu headings need lighter outlines to keep strokes open. */
+:lang(zh-CN) .iw-ui .iw-display {
+  font-family: 'Titan One', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
+  font-weight: 900;
+  -webkit-text-stroke-width: .08em;
+  letter-spacing: .025em;
+}
+:lang(zh-CN) .iw-ui .iw-btn__label,
+:lang(zh-CN) .iw-ui .iw-logo__sub span,
+:lang(zh-CN) .iw-ui .iw-title__presstext { font-weight: 900; letter-spacing: .04em; }
+:lang(zh-CN) .iw-ui .iw-ctl__keys { text-align: right; }

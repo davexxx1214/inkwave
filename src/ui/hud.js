@@ -342,6 +342,9 @@ export class HUD {
 
   showSplatted({ by = null, byColor = '#2f5bff', respawn = 5 } = {}) {
     this.hideSplatted(true);
+    const jumpHint = G.input?.touchControls?.supported
+      ? '复活后，点击「地图」选择队友或基地进行超级跳跃。'
+      : '复活后，按住 [TAB] 打开地图，选择队友或基地进行超级跳跃。';
     const C = 2 * Math.PI * 44;
     const num = h('b', { class: 'iw-spl__num' }, String(Math.ceil(respawn)));
     const ring = h('div', { class: 'iw-spl__ring', html: `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="44" class="bg"/><circle cx="50" cy="50" r="44" class="fg" style="stroke-dasharray:${C.toFixed(1)};stroke-dashoffset:${C.toFixed(1)};animation-duration:${Math.max(0.1, respawn)}s"/></svg>` }, num, h('small', null, 'RESPAWN'));
@@ -358,7 +361,7 @@ export class HUD {
           by ? h('div', { class: 'iw-spl__name iw-display' }, String(by)) : null,
           killer && killer.weaponId ? h('div', { class: 'iw-spl__wn' }, (WEAPONS[killer.weaponId] || {}).name || '') : null),
         ring),
-      h('div', { class: 'iw-spl__hint', html: richText('Hold [TAB] to plan a Super Jump') }));
+      h('div', { class: 'iw-spl__hint', html: richText(jumpHint) }));
     colorVars(el, 'by', toHex(byColor, '#2f5bff'));
     this.splatLayer.appendChild(el);
     const st = { el, tint, end: this._fxTime + Math.max(0, respawn), num, last: Math.ceil(respawn) };
@@ -1091,7 +1094,7 @@ export class HUD {
     const [w0, h0] = fit(14.5 * u), [w1, h1] = fit(Math.min(H * 0.78, W * 0.6));
     const t = this._mapT;
     const bw = lerp(w0, w1, t), bh = lerp(h0, h1, t);
-    const x = lerp(2.2 * u, (W - w1) / 2, t), y = lerp(H - 2.2 * u - h0, (H - h1) / 2 + u * 1.2, t);
+    const x = lerp(2.2 * u, (W - w1) / 2, t), y = lerp(G.input?.touchControls?.supported ? 68 : H - 2.2 * u - h0, (H - h1) / 2 + u * 1.2, t);
     const inside = (W - w1) / 2 < 22 * u;
     if (inside !== L.lgIn) { L.lgIn = inside; this.mapLegend.classList.toggle('is-inside', inside); }
     const box = `${x.toFixed(1)},${y.toFixed(1)},${bw.toFixed(1)},${bh.toFixed(1)}`;

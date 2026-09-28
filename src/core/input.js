@@ -18,6 +18,7 @@ export class Input {
     this.padPrev = [];
     this.padPressed = new Set();
     this.lastDevice = 'kbm';
+    this.touch = { keys: new Set(), pressed: new Set(), x: 0, y: 0, dx: 0, dy: 0, fire: false };
     this.onKey = null;              // (e) => bool consumed  (menus)
     window.addEventListener('keydown', (e) => {
       // the menus call preventDefault themselves when needed (text fields must still receive keystrokes)
@@ -59,6 +60,7 @@ export class Input {
   }
 
   requestLock() {
+    if (this.touchControls?.supported) { this.touchControls.enterFullscreen(); return; }
     if (this.locked) return;
     try {
       const p = this.canvas.requestPointerLock({ unadjustedMovement: true });
@@ -68,8 +70,8 @@ export class Input {
   }
   exitLock() { if (document.pointerLockElement) document.exitPointerLock(); }
 
-  down(code) { return this.keys.has(code); }
-  wasPressed(code) { return this.pressed.has(code); }
+  down(code) { return this.keys.has(code) || this.touch.keys.has(code); }
+  wasPressed(code) { return this.pressed.has(code) || this.touch.pressed.has(code); }
 
   pollPad() {
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -131,6 +133,8 @@ export class Input {
 
   // Call once at the very end of each frame.
   endFrame() {
+    this.touch.pressed.clear();
+    this.touch.dx = this.touch.dy = 0;
     this.pressed.clear();
     this.mouse.dx = 0; this.mouse.dy = 0;
     this.mouse.leftPressed = false; this.mouse.rightPressed = false;
